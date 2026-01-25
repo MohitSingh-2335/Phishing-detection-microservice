@@ -3,6 +3,9 @@ import joblib
 import numpy as np
 import os
 from feature_extractor import extract_features
+import hmac
+import hashlib
+import time
 
 app = Flask(__name__)
 
@@ -25,9 +28,23 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     # 1. SECURITY CHECK
-    auth_header = request.headers.get('X-INTERNAL-SECRET')
-    if auth_header != INTERNAL_SECRET_KEY:
-        return jsonify({"error": "Unauthorized Access"}), 401
+    received_signature = request.headers.get('X-INTERNAL-SECRET')
+    timestamp = request.headers.get('X-TIMESTAMP')
+
+    if not timestamp or not received_signature:
+        return jsonify({"error" : "Missing Security Headers"}), 401
+    
+    expected_signature = hmac.new(
+        INTERNAL_SECRET_KEY.encode(),
+        timestamp.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_signature, received_signature):
+        return jsonify({"error" : "Unauthorized Access"}), 401
+
+    # if auth_header != INTERNAL_SECRET_KEY:
+    #    return jsonify({"error": "Unauthorized Access"}), 401
 
     # 2. INPUT VALIDATION
     data = request.get_json()
@@ -52,7 +69,7 @@ def predict():
 
     return jsonify({
         "url": url,
-        "prediction": result,
+        "result": result,
         "phishing_probability": round(float(probability), 4),
         "features_used": features
     })
