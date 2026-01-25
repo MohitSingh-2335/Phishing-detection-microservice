@@ -1,5 +1,8 @@
-flask
+Flask
 scikit-learn
 pandas
-joblib
 numpy
+joblib
+python-whois
+requests
+gunicorn
