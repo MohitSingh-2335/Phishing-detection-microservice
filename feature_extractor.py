@@ -20,7 +20,7 @@ def extract_features(url):
 
     #Ensuring URL starting with HTTPS
     if not url.startswith(("http://", "https://")):
-        url = 'http://' + url
+        url = 'https://' + url
 
     # Parse URL
     try:
